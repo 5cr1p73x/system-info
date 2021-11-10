@@ -16,7 +16,7 @@ class App():
 
 	def __init__(self,
 				 title: str,
-				 resizable: tuple,
+				 resizable: tuple(bool, bool),
 				 icon: str=None):
 
 		self.root = tk.Tk()
@@ -65,7 +65,7 @@ class App():
 
 		cpu = get_cpu_info()['brand_raw']
 
-		ram_amount = round(ram_info.total / 1024 / 1024 / 1000)
+		ram_amount = round(ram_info.total/1024/1024/1000)
 
 		system_bitness = architecture()[0]
 
@@ -138,9 +138,9 @@ class App():
 
 		# Variables
 
-		available_ram = round(ram_info.available / 1024 / 1024 / 1024, 2)
+		available_ram = round(ram_info.available/1024/1024/1024, 2)
 		ram_usage_percent = round(ram_info.percent)
-		used_ram = ram_amount * (ram_usage_percent / 100)
+		used_ram = ram_amount * (ram_usage_percent/100)
 
 		processes_number = len(pids())
 		cpu_usage_percent = cpu_percent()

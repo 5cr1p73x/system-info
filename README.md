@@ -1,1 +1,4 @@
-Here you can learn something interesting about your computer hardware etc.
+PCInfo
+======
+
+> Program created to learn new things about your system
