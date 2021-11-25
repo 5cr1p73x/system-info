@@ -6,6 +6,7 @@ from psutil import virtual_memory, pids, cpu_percent
 from cpuinfo import get_cpu_info
 from platform import architecture, win32_ver, system
 from win32api import EnumDisplayDevices, EnumDisplaySettings, GetSystemMetrics
+from datetime import datetime
 
 # Class
 
@@ -15,9 +16,9 @@ class App():
 	Necesssary arguments: title(title of the window), resizazble(ability of resizing the window)'''
 
 	def __init__(self,
-				 title: str,
-				 resizable: tuple(bool, bool),
-				 icon: str=None):
+				 title,
+				 resizable,
+				 icon=None):
 
 		self.root = tk.Tk()
 
@@ -30,6 +31,20 @@ class App():
 
 		self.drawWidgets()
 
+	def calculateSpeed(self):
+
+		'''CPU Speed test. The speed will be known by calculating number π'''
+
+		start_time = datetime.now().microsecond
+		pi = 11 / 3.5
+		self.pi_label.config(text=f'π: {pi}')
+		self.result = datetime.now().microsecond - start_time
+		while self.result == 0:
+			start_time = datetime.now().microsecond
+			pi = 11 / 3.5
+			self.result = datetime.now().microsecond - start_time
+		self.result_label.config(text='Result: ' + str(self.result) + ' ms')
+
 	def drawLabels(self, parent, var, text, row=None, additional_str='', font_size=12):
 		
 		'''It is made to stop reapiting in code.
@@ -37,13 +52,11 @@ class App():
 		Method is a "template" to create them'''
 		
 		label = tk.Label(parent,
-						text=f'{text}{additional_str}{var}',
-						font=('Consolas', font_size),
-						padx=10,
-						pady=10)
+						 text=f'{text}{additional_str}{var}',
+						 font=('Consolas', font_size),
+						 padx=10,
+						 pady=10)
 		label.grid(row=row, column=0, sticky=tk.W)
-
-	# Drawing widgets
 
 	def drawWidgets(self):
 
@@ -171,6 +184,35 @@ class App():
 		tabs.add(performance_tab, text='Performance')
 
 		tabs.pack(fill=tk.BOTH, expand=1)
+
+		# CPU speed test tab and its widgets
+
+		cpu_speed_test_tab = tk.Frame(tabs)
+
+		# Widgets
+
+		info_label = tk.Label(cpu_speed_test_tab,
+							  text='Test your processor speed with calculating π \nand showing it on the screen',
+							  font=('Consolas', 12))
+		info_label.grid(row=0, column=0, sticky=tk.W, padx=10, pady=10)
+
+		self.result_label = tk.Label(cpu_speed_test_tab,
+							  text='Result: ',
+							  font=('Consolas', 12))
+		self.result_label.grid(row=1, column=0, sticky=tk.W, padx=10, pady=10)
+
+		self.pi_label = tk.Label(cpu_speed_test_tab,
+							  text='π: ',
+							  font=('Consolas', 12))
+		self.pi_label.grid(row=2, column=0, sticky=tk.W, padx=10, pady=10)
+
+		start_btn = tk.Button(cpu_speed_test_tab, text='Start', font=('Consolas', 14), command=self.calculateSpeed)
+		start_btn.grid(row=3, column=0, padx=10)
+
+		tabs.add(cpu_speed_test_tab, text='CPU Speed test')
+
+		tabs.pack(fill=tk.BOTH, expand=1)
+
 
 	def run(self):
 
