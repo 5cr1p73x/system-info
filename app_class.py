@@ -177,7 +177,7 @@ class App():
 		system_frame = tk.LabelFrame(performance_tab, text='System')
 
 		self.drawLabels(parent=system_frame, var=processes_number, text='Processes: ', row=0, font_size=8)
-		self.drawLabels(parent=system_frame, var=cpu_usage_percent, text='RAM usage percent(%): ', row=1, font_size=8)
+		self.drawLabels(parent=system_frame, var=cpu_usage_percent, text='CPU usage percent(%): ', row=1, font_size=8)
 
 		system_frame.grid(row=0, column=2)
 
