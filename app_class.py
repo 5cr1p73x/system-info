@@ -9,22 +9,21 @@ from win32api import EnumDisplayDevices, EnumDisplaySettings, GetSystemMetrics
 from datetime import datetime
 from math import pi as p
 
-# Class
+# Main class
 
 class App():
-
-	'''Class constructor.
-	Necesssary arguments: title(title of the window), resizazble(ability of resizing the window)'''
 
 	def __init__(self,
 				 title,
 				 resizable,
 				 icon=None):
 
+		'''Class constructor.
+		Necesssary arguments: title(title of the window), 
+		resizazble(ability of resizing the window)'''
+
 		self.root = tk.Tk()
-
 		self.root.title(title)
-
 		self.root.resizable(resizable[0], resizable[1])
 
 		if icon:
@@ -32,22 +31,23 @@ class App():
 
 		self.drawWidgets()
 
-	'''Optimization. DRY(don\'t repeat yourself).
-	These variables are used often.
-	Code becomes more readable'''
 
 	def setPerfVariables(self):
+
+		'''Optimization. DRY(don\'t repeat yourself).
+		These variables are used often.
+		Code becomes more readable'''
 
 		self.available_ram = round(self.ram_info.available/1024/1024/1024, 3)
 		self.ram_usage_percent = round(self.ram_info.percent)
 		self.used_ram = self.ram_amount * (self.ram_usage_percent/100)
 
-		self.processes_number = len(pids())
+		self.process_number = len(pids())
 		self.cpu_usage_percent = cpu_percent()
 
-	'''Ability of reloading the information in performance tab'''
-
 	def reloadFrames(self):
+
+		'''Ability of reloading the information in performance tab'''
 
 		self.setPerfVariables()
 
@@ -55,7 +55,7 @@ class App():
 		self.p_ram_usage_lbl.config(text=f'RAM usage percent(%): {self.ram_usage_percent}')
 		self.ram_usage_lbl.config(text=f'RAM usage(GB): {self.used_ram}')
 
-		self.proc_num_lbl.config(text=f'Processes amount: {self.processes_number}')
+		self.proc_num_lbl.config(text=f'Process amount: {self.process_number}')
 		self.cpu_usage_num_lbl.config(text=f'CPU usage percent(%): {self.cpu_usage_percent}')
 
 	def calculateSpeed(self):
@@ -78,6 +78,7 @@ class App():
 			self.result = datetime.now().microsecond - start_time
 
 		self.result_label.config(text='Result: ' + str(self.result) + ' ms')
+		self.start_btn.config(text='Restart')
 
 	def drawLabels(self, parent, var, text, row=None, additional_str='', font_size=12):
 
@@ -91,7 +92,8 @@ class App():
 						 padx=10,
 						 pady=10,
 						 bg='#2C2C2C',
-                         fg='#62CA00')
+                         fg='#62CA00',
+						 wraplength=500)
 		label.grid(row=row, column=0, sticky=tk.W)
 
 		return label
@@ -221,8 +223,8 @@ class App():
 									 fg='#fff')
 
 		self.proc_num_lbl = self.drawLabels(parent=system_frame,
-											var=self.processes_number,
-											text='Processes amount: ',
+											var=self.process_number,
+											text='Process amount: ',
 											row=0,
 											font_size=8)
 		self.cpu_usage_num_lbl = self.drawLabels(parent=system_frame,
@@ -270,11 +272,11 @@ class App():
 							  fg='#62CA00')
 		self.pi_label.grid(row=2, column=0, sticky=tk.W, padx=10, pady=10)
 
-		start_btn = tk.Button(cpu_speed_test_tab,
+		self.start_btn = tk.Button(cpu_speed_test_tab,
 							  text='Start',
 							  font=('Consolas', 14),
 							  command=self.calculateSpeed)
-		start_btn.grid(row=3, column=0, padx=10, pady=10)
+		self.start_btn.grid(row=3, column=0, padx=10, pady=10)
 
 		tabs.add(cpu_speed_test_tab, text='CPU Speed test')
 
