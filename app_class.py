@@ -2,16 +2,20 @@
 
 import tkinter as tk
 import tkinter.ttk as ttk
-from psutil import virtual_memory, pids, cpu_percent
+from psutil import virtual_memory, pids, cpu_percent, disk_usage
 from cpuinfo import get_cpu_info
 from platform import architecture, system
-from win32api import EnumDisplayDevices, EnumDisplaySettings, GetSystemMetrics
+from win32api import EnumDisplayDevices, EnumDisplaySettings, GetSystemMetrics, GetLogicalDriveStrings
 from datetime import datetime
 from math import pi as p
 
 # Main class
 
 class App():
+
+	# Class fields
+
+	labels = []
 
 	def __init__(self,
 				 title,
@@ -31,6 +35,32 @@ class App():
 
 		self.drawWidgets()
 
+	def setTheme(self, first_col, second_col, third_col=None):
+
+		'''Method to set dark/white theme'''
+
+		for i in self.labels:
+			
+			if third_col:
+				
+				i.config(bg=first_col, fg=third_col)
+
+			else:
+
+				i.config(bg=first_col, fg=second_col)
+
+		self.computer_hardware_tab.config(bg=first_col)
+		self.monitor_characteristics_tab.config(bg=first_col)
+		self.performance_tab.config(bg=first_col)
+		self.disks_tab.config(bg=first_col)
+		self.cpu_speed_test_tab.config(bg=first_col)
+
+		self.ram_frame.config(bg=first_col, fg=second_col)
+		self.system_frame.config(bg=first_col, fg=second_col)
+
+		self.info_label.config(bg=first_col)
+		self.pi_label.config(bg=first_col)
+		self.result_label.config(bg=first_col)
 
 	def setPerfVariables(self):
 
@@ -80,14 +110,14 @@ class App():
 		self.result_label.config(text='Result: ' + str(self.result) + ' ms')
 		self.start_btn.config(text='Restart')
 
-	def drawLabels(self, parent, var, text, row=None, additional_str='', font_size=12):
+	def drawLabel(self, parent, var, text, row=None, font_size=12):
 
 		'''It is made to stop reapiting in code.
 		Labels with information about system are used very often.
 		Method is a "template" to create them'''
 
 		label = tk.Label(parent,
-						 text=f'{text}{additional_str}{var}',
+						 text=f'{text}{var}',
 						 font=('Consolas', font_size),
 						 padx=10,
 						 pady=10,
@@ -96,11 +126,27 @@ class App():
 						 wraplength=500)
 		label.grid(row=row, column=0, sticky=tk.W)
 
+		self.labels.append(label)
+
 		return label
 
 	def drawWidgets(self):
 
-		'''The main part. Drawing 3 tabs and system's characteristics labels for each'''
+		'''The main part. Drawing menu, 4 tabs and system's
+		characteristics labels for 3 of them.
+		The 4th tab is a CPU Speed test'''
+
+		# Menu
+
+		main_menu = tk.Menu(self.root)
+		self.root.config(menu=main_menu)
+
+		theme_menu = tk.Menu(main_menu, tearoff=0)
+		theme_menu.add_command(label='White', command=lambda: self.setTheme('#F0F0F0', '#000'))
+		theme_menu.add_command(label='Dark', command=lambda: self.setTheme('#2C2C2C', '#fff', '#62CA00'))
+		main_menu.add_cascade(label='Theme', menu=theme_menu)
+
+		main_menu.add_command(label='Exit', command=self.root.destroy)
 
 		self.ram_info = virtual_memory()
 
@@ -112,7 +158,7 @@ class App():
 
 		# Computer hardware tab and its widgets
 
-		computer_hardware_tab = tk.Frame(tabs, bg='#2C2C2C')
+		self.computer_hardware_tab = tk.Frame(tabs, bg='#2C2C2C')
 
 		# Variables
 
@@ -124,35 +170,35 @@ class App():
 
 		# Widgets
 
-		self.drawLabels(parent=computer_hardware_tab,
+		self.drawLabel(parent=self.computer_hardware_tab,
 						var=os,
 						text='OS: ',
 						row=row)
 
 		row += 1
 
-		self.drawLabels(parent=computer_hardware_tab,
+		self.drawLabel(parent=self.computer_hardware_tab,
 						var=self.ram_amount,
 						text='RAM(Gb): ',
 						row=row)
 		row += 1
 
-		self.drawLabels(parent=computer_hardware_tab,
+		self.drawLabel(parent=self.computer_hardware_tab,
 						var=cpu,
 						text='CPU: ',
 						row=row)
 		row += 1
 
-		self.drawLabels(parent=computer_hardware_tab,
+		self.drawLabel(parent=self.computer_hardware_tab,
 						var=system_bitness,
 						text='System bitness: ',
 						row=row)
 
-		tabs.add(computer_hardware_tab, text='Computer hardware')
+		tabs.add(self.computer_hardware_tab, text='Computer hardware')
 
 		# Monitor characteristics tab and its widgets
 
-		monitor_characteristics_tab = tk.Frame(tabs, bg='#2C2C2C')
+		self.monitor_characteristics_tab = tk.Frame(tabs, bg='#2C2C2C')
 
 		# Variables
 
@@ -164,26 +210,26 @@ class App():
 
 		# Widgets
 
-		self.drawLabels(parent=monitor_characteristics_tab,
+		self.drawLabel(parent=self.monitor_characteristics_tab,
 						var=vid_card,
 						text='Video card: ',
 						row=0)
 
-		self.drawLabels(parent=monitor_characteristics_tab,
+		self.drawLabel(parent=self.monitor_characteristics_tab,
 						var=freq,
 						text='Frequency(GHz): ',
 						row=1)
 
-		self.drawLabels(parent=monitor_characteristics_tab,
+		self.drawLabel(parent=self.monitor_characteristics_tab,
 						var=screen_resolution,
 						text='Screen resolution: ',
 						row=2)
 
-		tabs.add(monitor_characteristics_tab, text='Monitor')
+		tabs.add(self.monitor_characteristics_tab, text='Monitor')
 
 		# Performance tab and its widgets
 
-		performance_tab = tk.Frame(tabs, bg='#2C2C2C')
+		self.performance_tab = tk.Frame(tabs, bg='#2C2C2C')
 
 		# Variables
 
@@ -193,92 +239,135 @@ class App():
 
 		# RAM frame
 
-		ram_frame = tk.LabelFrame(performance_tab, text='Physical memory', bg='#2C2C2C', fg='#fff')
+		self.ram_frame = tk.LabelFrame(self.performance_tab,
+								  text='Physical memory',
+								  bg='#2C2C2C',
+								  fg='#fff')
 
-		self.available_ram_lbl = self.drawLabels(parent=ram_frame,
+		self.available_ram_lbl = self.drawLabel(parent=self.ram_frame,
 												 var=self.available_ram,
 												 text='Available RAM(GB): ',
 												 row=0,
 												 font_size=8)
 
-		self.p_ram_usage_lbl = self.drawLabels(parent=ram_frame,
+		self.p_ram_usage_lbl = self.drawLabel(parent=self.ram_frame,
 											   var=self.ram_usage_percent,
 											   text='RAM usage percent(%): ',
 											   row=1,
 											   font_size=8)
 
-		self.ram_usage_lbl = self.drawLabels(parent=ram_frame,
+		self.ram_usage_lbl = self.drawLabel(parent=self.ram_frame,
 											 var=self.used_ram,
 											 text='RAM usage(GB): ',
 											 row=2,
 											 font_size=8)
 
-		ram_frame.grid(row=0, column=0, padx=5, pady=5)
+		self.ram_frame.grid(row=0, column=0, padx=5, pady=5)
 
 		# System frame
 
-		system_frame = tk.LabelFrame(performance_tab,
+		self.system_frame = tk.LabelFrame(self.performance_tab,
 									 text='System',
 									 bg='#2C2C2C',
 									 fg='#fff')
 
-		self.proc_num_lbl = self.drawLabels(parent=system_frame,
+		self.proc_num_lbl = self.drawLabel(parent=self.system_frame,
 											var=self.process_number,
 											text='Process amount: ',
 											row=0,
 											font_size=8)
-		self.cpu_usage_num_lbl = self.drawLabels(parent=system_frame,
+		self.cpu_usage_num_lbl = self.drawLabel(parent=self.system_frame,
 												 var=self.cpu_usage_percent,
 												 text='CPU usage percent(%): ',
 												 row=1,
 												 font_size=8)
 
-		system_frame.grid(row=0, column=2)
+		self.system_frame.grid(row=0, column=2)
 
-		reload_btn = tk.Button(performance_tab,
+		reload_btn = tk.Button(self.performance_tab,
 							   text='Reload',
 							   font=('Consolas', 14),
 							   command=self.reloadFrames)
 		reload_btn.grid(row=1, column=3, padx=10, pady=10)
 
-		tabs.add(performance_tab, text='Performance')
+		tabs.add(self.performance_tab, text='Performance')
 
 		tabs.pack(fill=tk.BOTH, expand=1)
 
-		# CPU speed test tab and its widgets
+		# Disks tab and its widgets
 
-		cpu_speed_test_tab = tk.Frame(tabs, bg='#2C2C2C')
+		self.disks_tab = tk.Frame(tabs, bg='#2C2C2C')
+
+		# Variables
+
+		disks = GetLogicalDriveStrings()
+		disks_list = disks.split('\000')[:-1]
+		disks = ', '.join(disks_list)
 
 		# Widgets
 
-		info_label = tk.Label(cpu_speed_test_tab,
+		self.drawLabel(parent=self.disks_tab,
+					   var=disks,
+					   text='disks\' letters: ',
+					   row=0)
+
+		# Drawing labels with info about free space on available disks
+
+		r = 1
+
+		for i in disks_list:
+
+			i = i.strip('\\')
+
+			try:
+				free_memory = round(float(disk_usage(i).free/1024/1024/1024), 1)
+			
+			except:
+				continue
+
+			r += 1
+
+			self.drawLabel(parent=self.disks_tab,
+						   var=free_memory,
+						   text=f'Free space(Gb) on drive {i} ',
+						   row=r)
+
+		tabs.add(self.disks_tab, text='disks')
+
+		# CPU speed test tab and its widgets
+
+		self.cpu_speed_test_tab = tk.Frame(tabs, bg='#2C2C2C')
+
+		# Widgets
+
+		self.info_label = tk.Label(self.cpu_speed_test_tab,
 							  text='Test your processor speed with calculating π \nand showing it on the screen',
 							  font=('Consolas', 12),
 							  bg='#2C2C2C',
-							  fg='#20B2AA')
-		info_label.grid(row=0, column=0, sticky=tk.W, padx=10, pady=10)
+							  fg='#1B948E')
+		self.info_label.grid(row=0, column=0, sticky=tk.W, padx=10, pady=10)
 
-		self.result_label = tk.Label(cpu_speed_test_tab,
+		self.result_label = tk.Label(self.cpu_speed_test_tab,
 							  text='Result: ',
 							  font=('Consolas', 12),
 							  bg='#2C2C2C',
-							  fg='#F43416')
+							  fg='#D32D13')
 		self.result_label.grid(row=1, column=0, sticky=tk.W, padx=10, pady=10)
 
-		self.pi_label = tk.Label(cpu_speed_test_tab,
+		self.pi_label = tk.Label(self.cpu_speed_test_tab,
 							  text='π: ',
 							  font=('Consolas', 12),
 							  bg='#2C2C2C',
-							  fg='#62CA00')
+							  fg='#4FA300')
 		self.pi_label.grid(row=2, column=0, sticky=tk.W, padx=10, pady=10)
 
-		self.start_btn = tk.Button(cpu_speed_test_tab,
+		self.start_btn = tk.Button(self.cpu_speed_test_tab,
 							  text='Start',
 							  font=('Consolas', 14),
 							  command=self.calculateSpeed)
 		self.start_btn.grid(row=3, column=0, padx=10, pady=10)
 
-		tabs.add(cpu_speed_test_tab, text='CPU Speed test')
+		tabs.add(self.cpu_speed_test_tab, text='CPU Speed test')
 
 		tabs.pack(fill=tk.BOTH, expand=1)
 
