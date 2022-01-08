@@ -3,7 +3,7 @@
 ## Program's abilities
 
 1. Information about RAM
-    > RAM amount, RAM usage etc.
+    > RAM amount, RAM usage, RAM usage diagram etc.
 
 2. Information about CPU
     > CPU name, CPU usage, CPU usage diagram etc.

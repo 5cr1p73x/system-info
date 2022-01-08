@@ -1,15 +1,17 @@
 # Importing necessary libraries and modules
 
+import threading
 import tkinter as tk
 import tkinter.ttk as ttk
-from psutil import virtual_memory, pids, cpu_percent, disk_usage
-from cpuinfo import get_cpu_info
-from platform import architecture, system
-from win32api import EnumDisplayDevices, EnumDisplaySettings, GetSystemMetrics, GetLogicalDriveStrings
 from datetime import datetime
-import threading
 from math import pi as p
+from platform import architecture, system
 from time import sleep
+
+from cpuinfo import get_cpu_info
+from psutil import cpu_percent, disk_usage, pids, virtual_memory
+from win32api import (EnumDisplayDevices, EnumDisplaySettings,
+                      GetLogicalDriveStrings, GetSystemMetrics)
 
 # Main class
 
@@ -18,6 +20,7 @@ class App():
 	# Class fields
 
 	labels = []
+	stop = False
 
 	def __init__(self,
 				 title,
@@ -37,19 +40,34 @@ class App():
 
 		self.drawWidgets()
 
-	def setUsageDiagram(self):
+	def setCPUUsageDiagram(self):
 		
-		'''Constant diagram changing'''
+		'''Constant CPU diagram changing'''
 		
 		while True:
 
 			cpu_usage_percent = cpu_percent()
 
-			x0, y0, x1, y1 = self.c.coords(self.diagram)
+			x0, y0, x1, y1 = self.cpu_diagram_c.coords(self.cpu_diagram)
 			y0 = round(100-cpu_usage_percent)
-			self.c.coords(self.diagram, x0, y0, x1, y1)
+			self.cpu_diagram_c.coords(self.cpu_diagram, x0, y0, x1, y1)
 
-			sleep(1.5)
+			sleep(0.5)
+	
+	def setRAMUsageDiagram(self):
+		
+		'''Constant RAM diagram changing'''
+		
+		while True:
+
+			ram_info = virtual_memory()
+			available_ram = round(ram_info.available/1024/1024, 3)
+
+			x0, y0, x1, y1 = self.ram_diagram_c.coords(self.ram_diagram)
+			y0 = round(available_ram//20)
+			self.ram_diagram_c.coords(self.ram_diagram, x0, y0, x1, y1)
+
+			sleep(0.5)
 
 	def setTheme(self, first_col, second_col, third_col=None):
 
@@ -74,12 +92,14 @@ class App():
 		self.ram_frame.config(bg=first_col, fg=second_col)
 		self.system_frame.config(bg=first_col, fg=second_col)
 		self.cpu_usage_frame.config(bg=first_col, fg=second_col)
+		self.ram_usage_frame.config(bg=first_col, fg=second_col)
 
 		self.info_label.config(bg=first_col)
 		self.pi_label.config(bg=first_col)
 		self.result_label.config(bg=first_col)
 
-		self.c.config(bg=first_col)
+		self.cpu_diagram_c.config(bg=first_col)
+		self.ram_diagram_c.config(bg=first_col)
 
 	def setPerfVariables(self):
 
@@ -87,8 +107,10 @@ class App():
 		These variables are used often.
 		Code becomes more readable'''
 
-		self.available_ram = round(self.ram_info.available/1024/1024/1024, 3)
-		self.ram_usage_percent = round(self.ram_info.percent)
+		ram_info = virtual_memory()
+
+		self.available_ram = round(ram_info.available/1024/1024/1024, 3)
+		self.ram_usage_percent = round(ram_info.percent)
 		self.used_ram = self.ram_amount * (self.ram_usage_percent/100)
 
 		self.process_number = len(pids())
@@ -281,7 +303,29 @@ class App():
 											 row=2,
 											 font_size=8)
 
-		self.ram_frame.grid(row=0, column=0, padx=5, pady=5)
+		self.ram_frame.grid(row=0, column=0)
+
+		# RAM usage frame
+
+		self.ram_usage_frame = tk.LabelFrame(self.performance_tab,
+											 text='RAM Usage',
+											 bg='#2C2C2C',
+											 fg='#fff')
+		self.ram_usage_frame.grid(row=0, column=1, padx=5, pady=5)
+
+		self.ram_diagram_c = tk.Canvas(self.ram_usage_frame,
+					  width=25,
+					  height=100,
+					  bg='#2C2C2C',
+					  bd=0,
+					  highlightthickness=0)
+		self.ram_diagram_c.pack()
+
+		self.ram_diagram = self.ram_diagram_c.create_rectangle(-1, -1, 25, 100,
+					fill='green')
+		
+		ram_diagram_thread = threading.Thread(target=self.setRAMUsageDiagram)
+		ram_diagram_thread.start()
 
 		# System frame
 
@@ -303,33 +347,33 @@ class App():
 
 		self.system_frame.grid(row=0, column=2)
 
-		reload_btn = tk.Button(self.performance_tab,
-							   text='Reload',
-							   font=('Consolas', 14),
-							   command=self.reloadFrames)
-		reload_btn.grid(row=1, column=3, padx=10, pady=10)
-
 		# CPU usage frame
 
 		self.cpu_usage_frame = tk.LabelFrame(self.performance_tab,
 											 text='CPU Usage',
 											 bg='#2C2C2C',
 											 fg='#fff')
-		self.cpu_usage_frame.grid(row=0, column=3)
+		self.cpu_usage_frame.grid(row=0, column=3, padx=5, pady=5)
 
-		self.c = tk.Canvas(self.cpu_usage_frame,
+		self.cpu_diagram_c = tk.Canvas(self.cpu_usage_frame,
 					  width=25,
 					  height=100,
 					  bg='#2C2C2C',
 					  bd=0,
 					  highlightthickness=0)
-		self.c.pack()
+		self.cpu_diagram_c.pack()
 
-		self.diagram = self.c.create_rectangle(-1, -1, 25, 100,
+		self.cpu_diagram = self.cpu_diagram_c.create_rectangle(-1, -1, 25, 100,
 						   fill='green')
 
-		diagram_thread = threading.Thread(target=self.setUsageDiagram)
-		diagram_thread.start()
+		cpu_diagram_thread = threading.Thread(target=self.setCPUUsageDiagram)
+		cpu_diagram_thread.start()
+
+		reload_btn = tk.Button(self.performance_tab,
+							   text='Reload',
+							   font=('Consolas', 14),
+							   command=self.reloadFrames)
+		reload_btn.grid(row=1, column=2, padx=10, pady=10)
 
 		tabs.add(self.performance_tab, text='Performance')
 
