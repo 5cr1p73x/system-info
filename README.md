@@ -6,7 +6,7 @@
     > RAM amount, RAM usage etc.
 
 2. Information about CPU
-    > CPU name, CPU usage, etc.
+    > CPU name, CPU usage, CPU usage diagram etc.
 
 3. CPU Speed test
 

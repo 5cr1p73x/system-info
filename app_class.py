@@ -7,7 +7,9 @@ from cpuinfo import get_cpu_info
 from platform import architecture, system
 from win32api import EnumDisplayDevices, EnumDisplaySettings, GetSystemMetrics, GetLogicalDriveStrings
 from datetime import datetime
+import threading
 from math import pi as p
+from time import sleep
 
 # Main class
 
@@ -35,6 +37,20 @@ class App():
 
 		self.drawWidgets()
 
+	def setUsageDiagram(self):
+		
+		'''Constant diagram changing'''
+		
+		while True:
+
+			cpu_usage_percent = cpu_percent()
+
+			x0, y0, x1, y1 = self.c.coords(self.diagram)
+			y0 = round(100-cpu_usage_percent)
+			self.c.coords(self.diagram, x0, y0, x1, y1)
+
+			sleep(1.5)
+
 	def setTheme(self, first_col, second_col, third_col=None):
 
 		'''Method to set dark/white theme'''
@@ -57,10 +73,13 @@ class App():
 
 		self.ram_frame.config(bg=first_col, fg=second_col)
 		self.system_frame.config(bg=first_col, fg=second_col)
+		self.cpu_usage_frame.config(bg=first_col, fg=second_col)
 
 		self.info_label.config(bg=first_col)
 		self.pi_label.config(bg=first_col)
 		self.result_label.config(bg=first_col)
+
+		self.c.config(bg=first_col)
 
 	def setPerfVariables(self):
 
@@ -290,6 +309,28 @@ class App():
 							   command=self.reloadFrames)
 		reload_btn.grid(row=1, column=3, padx=10, pady=10)
 
+		# CPU usage frame
+
+		self.cpu_usage_frame = tk.LabelFrame(self.performance_tab,
+											 text='CPU Usage',
+											 bg='#2C2C2C',
+											 fg='#fff')
+		self.cpu_usage_frame.grid(row=0, column=3)
+
+		self.c = tk.Canvas(self.cpu_usage_frame,
+					  width=25,
+					  height=100,
+					  bg='#2C2C2C',
+					  bd=0,
+					  highlightthickness=0)
+		self.c.pack()
+
+		self.diagram = self.c.create_rectangle(-1, -1, 25, 100,
+						   fill='green')
+
+		diagram_thread = threading.Thread(target=self.setUsageDiagram)
+		diagram_thread.start()
+
 		tabs.add(self.performance_tab, text='Performance')
 
 		tabs.pack(fill=tk.BOTH, expand=1)
@@ -308,7 +349,7 @@ class App():
 
 		self.drawLabel(parent=self.disks_tab,
 					   var=disks,
-					   text='disks\' letters: ',
+					   text='Disks\' letters: ',
 					   row=0)
 
 		# Drawing labels with info about free space on available disks
@@ -329,10 +370,10 @@ class App():
 
 			self.drawLabel(parent=self.disks_tab,
 						   var=free_memory,
-						   text=f'Free space(Gb) on drive {i} ',
+						   text=f'Free space(Gb) on disk {i} ',
 						   row=r)
 
-		tabs.add(self.disks_tab, text='disks')
+		tabs.add(self.disks_tab, text='Disks')
 
 		# CPU speed test tab and its widgets
 
