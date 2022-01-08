@@ -40,32 +40,22 @@ class App():
 
 		self.drawWidgets()
 
-	def setCPUUsageDiagram(self):
-		
-		'''Constant CPU diagram changing'''
-		
+	def setDiagram(self, canvas, diagram, main_var=None):
+
+		'''Constant changing of diagrams'''
+
 		while True:
 
-			cpu_usage_percent = cpu_percent()
+			x0, y0, x1, y1 = canvas.coords(diagram)
+			if main_var == cpu_percent:
 
-			x0, y0, x1, y1 = self.cpu_diagram_c.coords(self.cpu_diagram)
-			y0 = round(100-cpu_usage_percent)
-			self.cpu_diagram_c.coords(self.cpu_diagram, x0, y0, x1, y1)
+				var = main_var()
+				y0 = round(100-var)
+			
+			else:
+				y0 = round(virtual_memory().available/1024/1024, 3)//20
 
-			sleep(0.5)
-	
-	def setRAMUsageDiagram(self):
-		
-		'''Constant RAM diagram changing'''
-		
-		while True:
-
-			ram_info = virtual_memory()
-			available_ram = round(ram_info.available/1024/1024, 3)
-
-			x0, y0, x1, y1 = self.ram_diagram_c.coords(self.ram_diagram)
-			y0 = round(available_ram//20)
-			self.ram_diagram_c.coords(self.ram_diagram, x0, y0, x1, y1)
+			canvas.coords(diagram, x0, y0, x1, y1)
 
 			sleep(0.5)
 
@@ -324,7 +314,8 @@ class App():
 		self.ram_diagram = self.ram_diagram_c.create_rectangle(-1, -1, 25, 100,
 					fill='green')
 		
-		ram_diagram_thread = threading.Thread(target=self.setRAMUsageDiagram)
+		ram_diagram_thread = threading.Thread(target=self.setDiagram, args=(self.ram_diagram_c,
+																			self.ram_diagram))
 		ram_diagram_thread.start()
 
 		# System frame
@@ -366,7 +357,9 @@ class App():
 		self.cpu_diagram = self.cpu_diagram_c.create_rectangle(-1, -1, 25, 100,
 						   fill='green')
 
-		cpu_diagram_thread = threading.Thread(target=self.setCPUUsageDiagram)
+		cpu_diagram_thread = threading.Thread(target=self.setDiagram, args=(self.cpu_diagram_c,
+																			self.cpu_diagram,
+																			cpu_percent))
 		cpu_diagram_thread.start()
 
 		reload_btn = tk.Button(self.performance_tab,
