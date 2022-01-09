@@ -19,8 +19,10 @@ class App():
 
 	# Class fields
 
+	color_names = {'Green': '#62CA00', 'Blue': '#2975C1', 'White': '#fff',
+				   'Red': '#E10000', 'Yellow': '#DBC500', 'Orange': '#DB8700'}
+	color = '#62CA00'
 	labels = []
-	stop = False
 
 	def __init__(self,
 				 title,
@@ -39,6 +41,24 @@ class App():
 			self.root.iconbitmap(icon)
 
 		self.drawWidgets()
+
+	def setColor(self, color):
+		
+		'''Setting the main color of the app'''
+
+		self.color = color
+
+		for label in self.labels:
+
+			label.config(fg=color)
+
+		self.cpu_diagram_c.itemconfigure(self.cpu_diagram, fill=color)
+		self.ram_diagram_c.itemconfigure(self.ram_diagram, fill=color)
+
+		self.ram_frame.config(fg=color)
+		self.system_frame.config(fg=color)
+		self.cpu_usage_frame.config(fg=color)
+		self.ram_usage_frame.config(fg=color)
 
 	def setDiagram(self, canvas, diagram, main_var=None):
 
@@ -172,10 +192,20 @@ class App():
 		main_menu = tk.Menu(self.root)
 		self.root.config(menu=main_menu)
 
-		theme_menu = tk.Menu(main_menu, tearoff=0)
-		theme_menu.add_command(label='White', command=lambda: self.setTheme('#F0F0F0', '#000'))
-		theme_menu.add_command(label='Dark', command=lambda: self.setTheme('#2C2C2C', '#fff', '#62CA00'))
-		main_menu.add_cascade(label='Theme', menu=theme_menu)
+		theme_submenu = tk.Menu(main_menu, tearoff=0)
+		theme_submenu.add_command(label='White', command=lambda: self.setTheme('#F0F0F0', self.color))
+		theme_submenu.add_command(label='Dark', command=lambda: self.setTheme('#2C2C2C', '#fff', self.color))
+		main_menu.add_cascade(label='Theme', menu=theme_submenu)
+
+		color_submenu = tk.Menu(main_menu, tearoff=0)
+
+		for name, color in self.color_names.items():
+
+			print(name, color)
+
+			color_submenu.add_command(label=name, command=lambda color=color: self.setColor(color))
+
+		main_menu.add_cascade(label='Color', menu=color_submenu)
 
 		main_menu.add_command(label='Exit', command=self.root.destroy)
 
@@ -312,7 +342,7 @@ class App():
 		self.ram_diagram_c.pack()
 
 		self.ram_diagram = self.ram_diagram_c.create_rectangle(-1, -1, 25, 100,
-					fill='green')
+					fill=self.color)
 		
 		ram_diagram_thread = threading.Thread(target=self.setDiagram, args=(self.ram_diagram_c,
 																			self.ram_diagram))
@@ -355,7 +385,7 @@ class App():
 		self.cpu_diagram_c.pack()
 
 		self.cpu_diagram = self.cpu_diagram_c.create_rectangle(-1, -1, 25, 100,
-						   fill='green')
+						   fill=self.color)
 
 		cpu_diagram_thread = threading.Thread(target=self.setDiagram, args=(self.cpu_diagram_c,
 																			self.cpu_diagram,
@@ -393,12 +423,12 @@ class App():
 
 		r = 1
 
-		for i in disks_list:
+		for disk_letter in disks_list:
 
-			i = i.strip('\\')
+			disk_letter = disk_letter.strip('\\')
 
 			try:
-				free_memory = round(float(disk_usage(i).free/1024/1024/1024), 1)
+				free_memory = round(float(disk_usage(disk_letter).free/1024/1024/1024), 1)
 			
 			except:
 				continue
@@ -407,7 +437,7 @@ class App():
 
 			self.drawLabel(parent=self.disks_tab,
 						   var=free_memory,
-						   text=f'Free space(Gb) on disk {i} ',
+						   text=f'Free space(Gb) on disk {disk_letter} ',
 						   row=r)
 
 		tabs.add(self.disks_tab, text='Disks')
