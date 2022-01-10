@@ -20,7 +20,7 @@ class App():
 	# Class fields
 
 	color_names = {'Green': '#62CA00', 'Blue': '#2975C1', 'White': '#fff',
-				   'Red': '#E10000', 'Yellow': '#DBC500', 'Orange': '#DB8700'}
+				   'Red': '#E10000', 'Yellow': '#DBC500', 'Orange': '#DB8700', 'Black': '#000'}
 	color = '#62CA00'
 	labels = []
 
@@ -73,7 +73,7 @@ class App():
 				y0 = round(100-var)
 			
 			else:
-				y0 = round(virtual_memory().available/1024/1024, 3)//20
+				y0 = round(virtual_memory().available/1024/1024, 3)//(self.ram_amount*10)
 
 			canvas.coords(diagram, x0, y0, x1, y1)
 
@@ -200,8 +200,6 @@ class App():
 		color_submenu = tk.Menu(main_menu, tearoff=0)
 
 		for name, color in self.color_names.items():
-
-			print(name, color)
 
 			color_submenu.add_command(label=name, command=lambda color=color: self.setColor(color))
 
