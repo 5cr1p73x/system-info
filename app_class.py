@@ -207,6 +207,8 @@ class App():
 
 	def drawMainTab(self):
 
+		'''Drawing main tab'''
+
 		# Main characteristics tab and its widgets
 
 		self.ram_info = virtual_memory()
@@ -259,6 +261,8 @@ class App():
 
 	def drawMonitorTab(self):
 
+		'''Drawing monitor tab'''
+
 		# Monitor characteristics tab and its widgets
 
 		self.monitor_characteristics_tab = tk.Frame(self.tabs, bg='#2C2C2C')
@@ -291,6 +295,8 @@ class App():
 		self.tabs.add(self.monitor_characteristics_tab, text='Monitor')
 
 	def drawPerfTab(self):
+
+		'''Drawing performance tab'''
 
 		# Performance tab and its widgets
 
@@ -408,6 +414,8 @@ class App():
 
 	def drawDisksTab(self):
 
+		'''Drawing disks tab'''
+
 		# Disks tab and its widgets
 
 		self.disks_tab = tk.Frame(self.tabs, bg='#2C2C2C')
@@ -449,6 +457,8 @@ class App():
 		self.tabs.add(self.disks_tab, text='Disks')
 
 	def drawSpeedTab(self):
+
+		'''Drawing CPU speed test tab'''
 
 		# CPU speed test tab and its widgets
 
@@ -506,6 +516,8 @@ class App():
 		self.drawSpeedTab()
 
 	def exitApp(self):
+
+		'''Correct thread ending'''
 
 		self.thread_stop = True
 		
