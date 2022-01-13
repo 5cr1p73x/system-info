@@ -5,7 +5,8 @@ import tkinter as tk
 import tkinter.ttk as ttk
 from datetime import datetime
 from math import pi as p
-from platform import architecture, system
+from platform import system
+from struct import calcsize
 from time import sleep
 
 from cpuinfo import get_cpu_info
@@ -19,6 +20,7 @@ class App():
 
 	# Class fields
 
+	thread_stop = False
 	color_names = {'Green': '#62CA00', 'Blue': '#2975C1', 'White': '#fff',
 				   'Red': '#E10000', 'Yellow': '#DBC500', 'Orange': '#DB8700', 'Black': '#000'}
 	color = '#62CA00'
@@ -64,7 +66,7 @@ class App():
 
 		'''Constant changing of diagrams'''
 
-		while True:
+		while not self.thread_stop:
 
 			x0, y0, x1, y1 = canvas.coords(diagram)
 			if main_var == cpu_percent:
@@ -93,7 +95,7 @@ class App():
 
 				i.config(bg=first_col, fg=second_col)
 
-		self.computer_hardware_tab.config(bg=first_col)
+		self.main_info_tab.config(bg=first_col)
 		self.monitor_characteristics_tab.config(bg=first_col)
 		self.performance_tab.config(bg=first_col)
 		self.disks_tab.config(bg=first_col)
@@ -181,13 +183,9 @@ class App():
 
 		return label
 
-	def drawWidgets(self):
+	def drawMenu(self):
 
-		'''The main part. Drawing menu, 4 tabs and system's
-		characteristics labels for 3 of them.
-		The 4th tab is a CPU Speed test'''
-
-		# Menu
+		'''Drawing menu'''
 
 		main_menu = tk.Menu(self.root)
 		self.root.config(menu=main_menu)
@@ -207,17 +205,21 @@ class App():
 
 		main_menu.add_command(label='Exit', command=self.root.destroy)
 
+	def drawMainTab(self):
+
+		# Main characteristics tab and its widgets
+
 		self.ram_info = virtual_memory()
 
 		row = 0
 
 		os = system()
 
-		tabs = ttk.Notebook(self.root)
+		self.tabs = ttk.Notebook(self.root)
 
 		# Computer hardware tab and its widgets
 
-		self.computer_hardware_tab = tk.Frame(tabs, bg='#2C2C2C')
+		self.main_info_tab = tk.Frame(self.tabs, bg='#2C2C2C')
 
 		# Variables
 
@@ -225,39 +227,41 @@ class App():
 
 		self.ram_amount = round(self.ram_info.total/1024/1024/1000)
 
-		system_bitness = architecture()[0]
+		system_bitness = calcsize('P') * 8
 
 		# Widgets
 
-		self.drawLabel(parent=self.computer_hardware_tab,
+		self.drawLabel(parent=self.main_info_tab,
 						var=os,
 						text='OS: ',
 						row=row)
 
 		row += 1
 
-		self.drawLabel(parent=self.computer_hardware_tab,
+		self.drawLabel(parent=self.main_info_tab,
 						var=self.ram_amount,
 						text='RAM(Gb): ',
 						row=row)
 		row += 1
 
-		self.drawLabel(parent=self.computer_hardware_tab,
+		self.drawLabel(parent=self.main_info_tab,
 						var=cpu,
 						text='CPU: ',
 						row=row)
 		row += 1
 
-		self.drawLabel(parent=self.computer_hardware_tab,
+		self.drawLabel(parent=self.main_info_tab,
 						var=system_bitness,
 						text='System bitness: ',
 						row=row)
 
-		tabs.add(self.computer_hardware_tab, text='Computer hardware')
+		self.tabs.add(self.main_info_tab, text='Main info')
+
+	def drawMonitorTab(self):
 
 		# Monitor characteristics tab and its widgets
 
-		self.monitor_characteristics_tab = tk.Frame(tabs, bg='#2C2C2C')
+		self.monitor_characteristics_tab = tk.Frame(self.tabs, bg='#2C2C2C')
 
 		# Variables
 
@@ -284,11 +288,13 @@ class App():
 						text='Screen resolution: ',
 						row=2)
 
-		tabs.add(self.monitor_characteristics_tab, text='Monitor')
+		self.tabs.add(self.monitor_characteristics_tab, text='Monitor')
+
+	def drawPerfTab(self):
 
 		# Performance tab and its widgets
 
-		self.performance_tab = tk.Frame(tabs, bg='#2C2C2C')
+		self.performance_tab = tk.Frame(self.tabs, bg='#2C2C2C')
 
 		# Variables
 
@@ -396,13 +402,15 @@ class App():
 							   command=self.reloadFrames)
 		reload_btn.grid(row=1, column=2, padx=10, pady=10)
 
-		tabs.add(self.performance_tab, text='Performance')
+		self.tabs.add(self.performance_tab, text='Performance')
 
-		tabs.pack(fill=tk.BOTH, expand=1)
+		self.tabs.pack(fill=tk.BOTH, expand=1)
+
+	def drawDisksTab(self):
 
 		# Disks tab and its widgets
 
-		self.disks_tab = tk.Frame(tabs, bg='#2C2C2C')
+		self.disks_tab = tk.Frame(self.tabs, bg='#2C2C2C')
 
 		# Variables
 
@@ -438,11 +446,13 @@ class App():
 						   text=f'Free space(Gb) on disk {disk_letter} ',
 						   row=r)
 
-		tabs.add(self.disks_tab, text='Disks')
+		self.tabs.add(self.disks_tab, text='Disks')
+
+	def drawSpeedTab(self):
 
 		# CPU speed test tab and its widgets
 
-		self.cpu_speed_test_tab = tk.Frame(tabs, bg='#2C2C2C')
+		self.cpu_speed_test_tab = tk.Frame(self.tabs, bg='#2C2C2C')
 
 		# Widgets
 
@@ -473,15 +483,39 @@ class App():
 							  command=self.calculateSpeed)
 		self.start_btn.grid(row=3, column=0, padx=10, pady=10)
 
-		tabs.add(self.cpu_speed_test_tab, text='CPU Speed test')
+		self.tabs.add(self.cpu_speed_test_tab, text='CPU Speed test')
 
-		tabs.pack(fill=tk.BOTH, expand=1)
+		self.tabs.pack(fill=tk.BOTH, expand=1)
 
+	def drawWidgets(self):
+
+		'''The main part. Drawing menu, 4 tabs and system's
+		characteristics labels for 3 of them.
+		The 4th tab is a CPU Speed test'''
+
+		self.drawMenu()
+
+		self.drawMainTab()
+
+		self.drawMonitorTab()
+
+		self.drawPerfTab()
+
+		self.drawDisksTab()
+
+		self.drawSpeedTab()
+
+	def exitApp(self):
+
+		self.thread_stop = True
+		
+		self.root.destroy()
 
 	def run(self):
 
 		'''Runs our app'''
 
+		self.root.protocol('WM_DELETE_WINDOW', self.exitApp)
 		self.root.mainloop()
 
 
