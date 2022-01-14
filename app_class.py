@@ -7,7 +7,8 @@ from datetime import datetime
 from math import pi as p
 from platform import system
 from struct import calcsize
-from time import sleep
+from time import sleep, time
+from tkinter.messagebox import askokcancel
 
 from cpuinfo import get_cpu_info
 from psutil import cpu_percent, disk_usage, pids, virtual_memory
@@ -145,20 +146,20 @@ class App():
 
 		'''CPU Speed test. The speed will be known by calculating number π'''
 
-		start_time = datetime.now().microsecond
+		start_time = time()
 
 		11 / 3.5
 
 		self.pi_label.config(text=f'π: {p}')
-		self.result = datetime.now().microsecond - start_time
+		self.result = time() - start_time
 
 		while self.result == 0:
 
-			start_time = datetime.now().microsecond
+			start_time = time()
 
 			11 / 3.5
 
-			self.result = datetime.now().microsecond - start_time
+			self.result = time() - start_time
 
 		self.result_label.config(text='Result: ' + str(self.result) + ' ms')
 		self.start_btn.config(text='Restart')
@@ -203,7 +204,7 @@ class App():
 
 		main_menu.add_cascade(label='Color', menu=color_submenu)
 
-		main_menu.add_command(label='Exit', command=self.root.destroy)
+		main_menu.add_command(label='Exit', command=self.exitApp)
 
 	def drawMainTab(self):
 
@@ -517,11 +518,15 @@ class App():
 
 	def exitApp(self):
 
-		'''Correct thread ending'''
-
-		self.thread_stop = True
+		'''Correct app ending'''
 		
-		self.root.destroy()
+		answer = askokcancel('Quit app', 'Are you sure that you want to quit the app?')
+
+		if answer:
+
+			self.thread_stop = True
+
+			self.root.destroy()
 
 	def run(self):
 
