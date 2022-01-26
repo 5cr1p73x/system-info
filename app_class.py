@@ -3,7 +3,6 @@
 import threading
 import tkinter as tk
 import tkinter.ttk as ttk
-from datetime import datetime
 from math import pi as p
 from platform import system
 from struct import calcsize
@@ -11,9 +10,13 @@ from time import sleep, time
 from tkinter.messagebox import askokcancel
 
 from cpuinfo import get_cpu_info
-from psutil import cpu_percent, disk_usage, pids, virtual_memory
-from win32api import (EnumDisplayDevices, EnumDisplaySettings,
-                      GetLogicalDriveStrings, GetSystemMetrics)
+from psutil import (cpu_percent, disk_partitions, disk_usage, pids,
+                    virtual_memory)
+
+if system() == 'Windows':
+	from win32api import (EnumDisplayDevices, EnumDisplaySettings)
+
+from pyautogui import size
 
 # Main class
 
@@ -26,6 +29,8 @@ class App():
 				   'Red': '#E10000', 'Yellow': '#DBC500', 'Orange': '#DB8700', 'Black': '#000'}
 	color = '#62CA00'
 	labels = []
+	disks = []
+	space = []
 
 	def __init__(self,
 				 title,
@@ -270,11 +275,19 @@ class App():
 
 		# Variables
 
-		display_info = EnumDisplayDevices()
-		vid_card = display_info.DeviceString
-		freq = EnumDisplaySettings(display_info.DeviceName).DisplayFrequency
 
-		screen_resolution = f'{GetSystemMetrics(0)} x {GetSystemMetrics(1)}'
+		if system() == 'Linux':
+
+			vid_card = '---'
+			freq = '---'
+		
+		else:
+
+			display_info = EnumDisplayDevices()
+			vid_card = display_info.DeviceString
+			freq = EnumDisplaySettings(display_info.DeviceName).DisplayFrequency
+
+		screen_resolution = f'{size()[0]} x {size()[1]}'
 
 		# Widgets
 
@@ -413,6 +426,10 @@ class App():
 
 		self.tabs.pack(fill=tk.BOTH, expand=1)
 
+	def getSize(self, obj):
+
+		return round(obj/1024/1024/1024, 1)
+
 	def drawDisksTab(self):
 
 		'''Drawing disks tab'''
@@ -423,14 +440,25 @@ class App():
 
 		# Variables
 
-		disks = GetLogicalDriveStrings()
-		disks_list = disks.split('\000')[:-1]
-		disks = ', '.join(disks_list)
+		partitions = disk_partitions()
+
+		for partition in partitions:
+
+			try:
+
+				partition_usage = disk_usage(partition.mountpoint)
+
+			except PermissionError:
+
+				continue
+
+			self.space.append(self.getSize(partition_usage.free))
+			self.disks.append(partition.device)
 
 		# Widgets
 
 		self.drawLabel(parent=self.disks_tab,
-					   var=disks,
+					   var=', '.join(self.disks),
 					   text='Disks\' letters: ',
 					   row=0)
 
@@ -438,15 +466,15 @@ class App():
 
 		r = 1
 
-		for disk_letter in disks_list:
-
-			disk_letter = disk_letter.strip('\\')
+		for disk_letter in self.disks:
 
 			try:
-				free_memory = round(float(disk_usage(disk_letter).free/1024/1024/1024), 1)
+				free_memory = self.space[self.disks.index(disk_letter)]
 			
 			except:
 				continue
+
+			disk_letter = disk_letter.strip('\\')
 
 			r += 1
 
