@@ -18,6 +18,9 @@ if system() == 'Windows':
 
 from pyautogui import size
 
+from getpass import getuser
+from os import path
+
 # Main class
 
 class App():
@@ -29,6 +32,7 @@ class App():
 				   'Red': '#E10000', 'Yellow': '#DBC500', 'Orange': '#DB8700', 'Black': '#000'}
 	color = '#62CA00'
 	labels = []
+	tabs_list = []
 	disks = []
 	space = []
 
@@ -47,6 +51,8 @@ class App():
 
 		if icon:
 			self.root.iconbitmap(icon)
+
+		self.tabs = ttk.Notebook(self.root)
 
 		self.drawWidgets()
 
@@ -87,37 +93,29 @@ class App():
 
 			sleep(0.5)
 
-	def setTheme(self, first_col, second_col, third_col=None):
+	def setTheme(self, bg_color):
 
 		'''Method to set dark/white theme'''
 
-		for i in self.labels:
-			
-			if third_col:
+		for label in self.labels:
 				
-				i.config(bg=first_col, fg=third_col)
+				label.config(bg=bg_color)
 
-			else:
+		for tab in self.tabs_list:
 
-				i.config(bg=first_col, fg=second_col)
+			tab.config(bg=bg_color)
 
-		self.main_info_tab.config(bg=first_col)
-		self.monitor_characteristics_tab.config(bg=first_col)
-		self.performance_tab.config(bg=first_col)
-		self.disks_tab.config(bg=first_col)
-		self.cpu_speed_test_tab.config(bg=first_col)
+		self.ram_frame.config(bg=bg_color)
+		self.system_frame.config(bg=bg_color)
+		self.cpu_usage_frame.config(bg=bg_color)
+		self.ram_usage_frame.config(bg=bg_color)
 
-		self.ram_frame.config(bg=first_col, fg=second_col)
-		self.system_frame.config(bg=first_col, fg=second_col)
-		self.cpu_usage_frame.config(bg=first_col, fg=second_col)
-		self.ram_usage_frame.config(bg=first_col, fg=second_col)
+		self.info_label.config(bg=bg_color)
+		self.pi_label.config(bg=bg_color)
+		self.result_label.config(bg=bg_color)
 
-		self.info_label.config(bg=first_col)
-		self.pi_label.config(bg=first_col)
-		self.result_label.config(bg=first_col)
-
-		self.cpu_diagram_c.config(bg=first_col)
-		self.ram_diagram_c.config(bg=first_col)
+		self.cpu_diagram_c.config(bg=bg_color)
+		self.ram_diagram_c.config(bg=bg_color)
 
 	def setPerfVariables(self):
 
@@ -189,6 +187,16 @@ class App():
 
 		return label
 
+	def drawTab(self, name):
+
+		tab = tk.Frame(self.tabs, bg="#2C2C2C")
+
+		self.tabs.add(tab, text=name)
+
+		self.tabs_list.append(tab)
+
+		return tab
+
 	def drawMenu(self):
 
 		'''Drawing menu'''
@@ -197,8 +205,8 @@ class App():
 		self.root.config(menu=main_menu)
 
 		theme_submenu = tk.Menu(main_menu, tearoff=0)
-		theme_submenu.add_command(label='White', command=lambda: self.setTheme('#F0F0F0', self.color))
-		theme_submenu.add_command(label='Dark', command=lambda: self.setTheme('#2C2C2C', '#fff', self.color))
+		theme_submenu.add_command(label='White', command=lambda: self.setTheme('#F0F0F0'))
+		theme_submenu.add_command(label='Dark', command=lambda: self.setTheme('#2C2C2C'))
 		main_menu.add_cascade(label='Theme', menu=theme_submenu)
 
 		color_submenu = tk.Menu(main_menu, tearoff=0)
@@ -215,21 +223,17 @@ class App():
 
 		'''Drawing main tab'''
 
-		# Main characteristics tab and its widgets
+		# Main tab and its widgets
+
+		self.main_info_tab = self.drawTab("Main info")
+
+		# Variables
 
 		self.ram_info = virtual_memory()
 
 		row = 0
 
 		os = system()
-
-		self.tabs = ttk.Notebook(self.root)
-
-		# Computer hardware tab and its widgets
-
-		self.main_info_tab = tk.Frame(self.tabs, bg='#2C2C2C')
-
-		# Variables
 
 		cpu = get_cpu_info()['brand_raw']
 
@@ -271,10 +275,9 @@ class App():
 
 		# Monitor characteristics tab and its widgets
 
-		self.monitor_characteristics_tab = tk.Frame(self.tabs, bg='#2C2C2C')
+		self.monitor_characteristics_tab = self.drawTab("Monitor")
 
 		# Variables
-
 
 		if system() == 'Linux':
 
@@ -314,7 +317,7 @@ class App():
 
 		# Performance tab and its widgets
 
-		self.performance_tab = tk.Frame(self.tabs, bg='#2C2C2C')
+		self.performance_tab = self.drawTab("Performance")
 
 		# Variables
 
@@ -327,7 +330,7 @@ class App():
 		self.ram_frame = tk.LabelFrame(self.performance_tab,
 								  text='Physical memory',
 								  bg='#2C2C2C',
-								  fg='#fff')
+								  fg='#62CA00')
 
 		self.available_ram_lbl = self.drawLabel(parent=self.ram_frame,
 												 var=self.available_ram,
@@ -354,7 +357,7 @@ class App():
 		self.ram_usage_frame = tk.LabelFrame(self.performance_tab,
 											 text='RAM Usage',
 											 bg='#2C2C2C',
-											 fg='#fff')
+											 fg='#62CA00')
 		self.ram_usage_frame.grid(row=0, column=1, padx=5, pady=5)
 
 		self.ram_diagram_c = tk.Canvas(self.ram_usage_frame,
@@ -377,7 +380,7 @@ class App():
 		self.system_frame = tk.LabelFrame(self.performance_tab,
 									 text='System',
 									 bg='#2C2C2C',
-									 fg='#fff')
+									 fg='#62CA00')
 
 		self.proc_num_lbl = self.drawLabel(parent=self.system_frame,
 											var=self.process_number,
@@ -397,7 +400,7 @@ class App():
 		self.cpu_usage_frame = tk.LabelFrame(self.performance_tab,
 											 text='CPU Usage',
 											 bg='#2C2C2C',
-											 fg='#fff')
+											 fg='#62CA00')
 		self.cpu_usage_frame.grid(row=0, column=3, padx=5, pady=5)
 
 		self.cpu_diagram_c = tk.Canvas(self.cpu_usage_frame,
@@ -426,17 +429,13 @@ class App():
 
 		self.tabs.pack(fill=tk.BOTH, expand=1)
 
-	def getSize(self, obj):
-
-		return round(obj/1024/1024/1024, 1)
-
 	def drawDisksTab(self):
 
 		'''Drawing disks tab'''
 
 		# Disks tab and its widgets
 
-		self.disks_tab = tk.Frame(self.tabs, bg='#2C2C2C')
+		self.disks_tab = self.drawTab("Disks")
 
 		# Variables
 
@@ -452,7 +451,7 @@ class App():
 
 				continue
 
-			self.space.append(self.getSize(partition_usage.free))
+			self.space.append(round(partition_usage.free/1024/1024/1024, 1))
 			self.disks.append(partition.device)
 
 		# Widgets
@@ -491,12 +490,12 @@ class App():
 
 		# CPU speed test tab and its widgets
 
-		self.cpu_speed_test_tab = tk.Frame(self.tabs, bg='#2C2C2C')
+		self.cpu_speed_test_tab = self.drawTab("CPU speed test")
 
 		# Widgets
 
 		self.info_label = tk.Label(self.cpu_speed_test_tab,
-							  text='Test your processor speed with calculating π \nand showing it on the screen',
+								  text='Test your processor speed with calculating π \nand showing it on the screen',
 							  font=('Consolas', 12),
 							  bg='#2C2C2C',
 							  fg='#1B948E')
@@ -526,6 +525,34 @@ class App():
 
 		self.tabs.pack(fill=tk.BOTH, expand=1)
 
+	def drawUserTab(self):
+
+		'''Drawing user tab'''
+
+		# User tab and its widgets
+
+		self.user_tab = self.drawTab("User")
+
+		# Variables
+
+		user_name = getuser()
+
+		home_dir = path.expanduser("~")
+
+		# Widgets
+
+		self.drawLabel(parent=self.user_tab,
+					   var=user_name,
+					   text='User name: ',
+					   row=0)
+
+		self.drawLabel(parent=self.user_tab,
+					   var=home_dir,
+					   text='Home directory: ',
+					   row=1)
+
+		self.tabs.add(self.user_tab, text='User')
+
 	def drawWidgets(self):
 
 		'''The main part. Drawing menu, 4 tabs and system's
@@ -543,6 +570,8 @@ class App():
 		self.drawDisksTab()
 
 		self.drawSpeedTab()
+
+		self.drawUserTab()
 
 	def exitApp(self):
 
@@ -565,5 +594,6 @@ class App():
 
 
 if __name__ == '__main__':
+
 	app = App(title='test', resizable=(False, False), icon='img/icon.ico')
 	app.run()
