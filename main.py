@@ -1,6 +1,5 @@
-from app_class import App
+from app import App
 
 if __name__ == '__main__':
-
-	app = App('PCInfo', (False, False), icon='img/icon.ico')
-	app.run()
+    application = App('PCInfo', (False, False), icon='img/icon.ico')
+    application.run()
